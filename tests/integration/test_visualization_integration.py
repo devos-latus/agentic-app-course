@@ -26,7 +26,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../week_1/solution"))
 
 from agents import Runner, SQLiteSession, set_tracing_disabled
-from visualization_core import create_bar_chart_core, analyze_data_structure
+from visualization_tools import create_bar_chart_core, analyze_data_structure
 
 # Disable tracing for clean test output
 set_tracing_disabled(True)

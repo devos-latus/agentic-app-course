@@ -27,7 +27,7 @@ import sys
 # Add the solution directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../week_1/solution"))
 
-from visualization_core import (
+from visualization_tools import (
     # Core functions
     analyze_data_structure,
     create_bar_chart_core,

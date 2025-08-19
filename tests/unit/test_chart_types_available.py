@@ -24,7 +24,7 @@ import sys
 # Add the solution directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../week_1/solution"))
 
-from visualization_core import analyze_data_structure
+from visualization_tools import analyze_data_structure
 
 
 class TestChartTypesAvailable(unittest.TestCase):

@@ -48,7 +48,7 @@ from tools import (
     load_csv_file,
     discover_and_load_csv_files,
 )
-from visualization_core import (
+from visualization_tools import (
     analyze_data_for_visualization,
     create_bar_chart,
     create_line_plot,
