@@ -1,0 +1,23 @@
+---
+description: Workflow for thoughtful implementation approach
+globs: ["*.py", "*.md", "*.js", "*.ts"]
+alwaysApply: true
+---
+
+# Implementation Workflow
+
+## Core Process
+
+1. **Think Deeply**: Analyze the question thoroughly, focus on the core requirement, avoid unnecessary additions
+2. **Propose Implementation**: Present clear explanation of what will be implemented and why
+3. **Wait for Approval**: Do not implement until user explicitly approves the approach
+4. **Execute**: Only after approval, proceed with clean, focused implementation
+
+## Rules
+
+- No code implementation without prior explanation and approval
+- **Always reference README.md** for project scope and requirements
+- Focus only on what's documented in README - avoid adding undocumented features
+- **Write focused unit tests** for any new file, feature, or functionality to validate it works as required
+- Present reasoning before action
+- Keep explanations concise but complete

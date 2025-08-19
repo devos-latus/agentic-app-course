@@ -5,9 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "arize-phoenix==11.21.0",
+    "gradio>=5.42.0",
     "marimo>=0.14.16",
+    "matplotlib>=3.10.5",
+    "numpy>=2.3.2",
     "openai>=1.99.1",
     "openai-agents>=0.2.4",
+    "openinference-instrumentation-openai>=0.1.30",
+    "pandas>=2.3.1",
+    "pre-commit>=4.3.0",
     "rich>=14.1.0",
     "tweepy>=4.16.0",
 ]
@@ -18,6 +25,7 @@ dev = [
     "pre-commit>=4.0.0",
     "pytest>=8.4.1",
     "ruff>=0.12.7",
+    "pytest-asyncio>=1.1.0",
 ]
 
 [build-system]
@@ -26,3 +34,25 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["agentic_app_quickstart"]
+
+[tool.pytest.ini_options]
+# Suppress specific warnings from external dependencies
+filterwarnings = [
+    "ignore:.*json_encoders.*:DeprecationWarning",
+    "ignore:.*PydanticDeprecatedSince20.*:DeprecationWarning",
+    "ignore:.*json_encoders.*",
+]
+# Async test configuration
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+# Ignore E402 (module level import not at top of file) in test files
+# This is needed because test files often need to modify sys.path before imports
+[tool.ruff.per-file-ignores]
+"tests/**/*.py" = ["E402"]

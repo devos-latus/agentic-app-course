@@ -1,0 +1,157 @@
+---
+description: Enforces coding style patterns from agentic_app_quickstart examples
+globs: ["*.py"]
+alwaysApply: true
+---
+
+# Agentic App Quickstart Coding Style
+
+Follow the exact patterns from the examples in agentic_app_quickstart/examples/code/ when implementing agents and tools.
+
+## File Structure and Imports
+
+- Always start with comprehensive docstring including:
+  - Brief description of the example/module
+  - Key concepts section (bulleted list)
+  - Use cases section (bulleted list)
+  - Example interactions or agent descriptions
+
+- Import order:
+  ```python
+  import asyncio
+  from agents import Agent, Runner, SQLiteSession, set_tracing_disabled, function_tool
+  from agentic_app_quickstart.examples.helpers import get_model
+  # Other imports...
+  ```
+
+- Always include: `set_tracing_disabled(True)` after imports
+
+## Agent Creation Pattern
+
+Follow the exact Agent constructor pattern:
+```python
+agent = Agent(
+    name="DescriptiveAgentName",
+    instructions="Clear, detailed instructions with specific behavior guidelines...",
+    model=get_model(),
+    tools=[list_of_tools] if needed
+)
+```
+
+## Function Tools Pattern
+
+Use @function_tool decorator with comprehensive docstrings:
+```python
+@function_tool
+def function_name():
+    """
+    Detailed description of what this tool does.
+    
+    Explain the purpose, when agents should use it, and what it returns.
+    Include parameter descriptions and return value details.
+    
+    Returns:
+        type: Description of return value
+    """
+    # Implementation
+    return result
+```
+
+## Multi-Agent Architecture (like 05_handoffs.py)
+
+- Create all agents in one file
+- Set up handoff relationships:
+  ```python
+  agent.handoffs = [list_of_agents_it_can_transfer_to]
+  ```
+- Create agent registry dictionary:
+  ```python
+  agents = {
+      "agent_key": agent_instance,
+      # ...
+  }
+  ```
+
+## Memory Pattern (like 03_simple_memory.py)
+
+- Use SQLiteSession with simple session ID:
+  ```python
+  session = SQLiteSession(session_id=123)
+  ```
+- Always pass session to Runner.run():
+  ```python
+  result = await Runner.run(
+      starting_agent=agent,
+      input=user_input,
+      session=session  # This enables memory!
+  )
+  ```
+
+## Main Function Pattern
+
+- Always use async/await pattern
+- Include comprehensive docstring explaining the function's purpose
+- Implement conversation loop with proper exit handling:
+  ```python
+  async def main():
+      """
+      Detailed docstring explaining what this function does...
+      """
+      print("Welcome message...")
+      
+      while True:
+          user_input = input("You: ")
+          
+          if user_input.lower() in ["quit", "exit", "bye"]:
+              print("Goodbye!")
+              break
+              
+          try:
+              result = await Runner.run(
+                  starting_agent=agent,
+                  input=user_input,
+                  session=session
+              )
+              print(f"Agent: {result.final_output}")
+              
+          except Exception as e:
+              print(f"Error: {str(e)}")
+  
+  if __name__ == "__main__":
+      asyncio.run(main())
+  ```
+
+## Error Handling
+
+- Use try/except blocks around Runner.run()
+- Provide helpful error messages to users
+- For guardrails, catch InputGuardrailTripwireTriggered specifically
+
+## Documentation Style
+
+- Use triple quotes for docstrings
+- Include "Key concepts:" and "Use cases:" sections
+- Provide concrete examples in docstrings
+- Explain agent instructions clearly and specifically
+- Comment complex logic inline
+
+## Agent Instructions
+
+- Be specific about agent roles and capabilities
+- Include clear behavioral guidelines
+- Mention available specialists/handoff targets
+- Provide examples of what the agent should do
+- Use bullet points for clarity in instructions
+
+## Variable Naming
+
+- Use descriptive names: `reception_agent`, `tech_support_agent`
+- Follow snake_case for variables and functions
+- Use clear, intention-revealing names
+
+## Code Organization
+
+- Group related agents together
+- Separate tool definitions from agent creation
+- Keep main conversation loop clean and focused
+- Use helper functions for complex operations

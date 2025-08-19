@@ -1,0 +1,39 @@
+---
+description: Project standards for package management and testing structure
+globs: ["*.py", "*.toml", "pyproject.toml"]
+alwaysApply: true
+---
+
+# Project Standards
+
+## Package Management
+
+- **Use uv for package management** - Never use pip or conda
+- Dependencies go in `pyproject.toml`
+- Lock file is `uv.lock`
+- Installation: `uv add package_name`
+- Virtual env: `uv venv` and `uv pip install`
+
+## Testing Structure
+
+Tests must be organized in the following structure:
+
+```
+tests/
+├── unit/          # Unit tests for individual functions/classes
+│   ├── test_tools.py
+│   ├── test_agents.py
+│   └── test_utils.py
+└── e2e/           # End-to-end integration tests
+    ├── test_complete_workflow.py
+    ├── test_agent_handoffs.py
+    └── test_user_scenarios.py
+```
+
+## Rules
+
+- All tests go in `tests/` folder with `unit/` and `e2e/` subfolders
+- Use `uv` for all package operations, never pip
+- Test files must start with `test_`
+- Run tests with: `uv run pytest tests/`
+- Use `ruff` for code quality checks when running tests to ensure clean, consistent code
