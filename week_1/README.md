@@ -18,7 +18,7 @@ week_1/solution/
 ├── chat_service.py      # Shared service layer for both interfaces
 ├── csv_agents.py        # All agents with handoff relationships & guardrails
 ├── tools.py             # Function tools for data operations
-├── visualization_core.py # Chart generation and visualization tools
+├── visualization_tools.py # Chart generation and visualization tools
 ├── charts/              # Generated chart files (auto-cleaned after sessions)
 └── data/                # Sample CSV files (auto-loaded at startup)
     ├── employee_data.csv
@@ -117,19 +117,18 @@ visualization_agent.handoffs = [communication_agent]
 - **SQL Chain** is linear and deterministic: Planner → Writer → Evaluator
 - **Query Evaluator** returns directly to Communication (bypasses Analytics)
 - **Visualization Agent** only accessible via Analytics Agent
-```
 
 ## 🛡️ Guardrails & Safety
 
-#### Detailed Agent Responsibilities
+### Detailed Agent Responsibilities
 
-**1. Communication Agent** (`communication_agent`)
+#### 1. Communication Agent (`communication_agent`)
 - **Role**: User interface and response formatting
 - **Tools**: `get_all_tables`, `get_table_schema`
 - **Handoffs**: `[analytics_agent, data_loader_agent]`
 - **Purpose**: Welcomes users, formats technical results into friendly language
 
-**2. Analytics Agent** (`analytics_agent`) 
+#### 2. Analytics Agent (`analytics_agent`) 
 - **Role**: Determines query complexity and routes appropriately
 - **Tools**: `calculate_column_average`, `count_rows_with_value`, `get_table_schema`, `get_all_tables`
 - **Handoffs**: `[communication_agent, query_planner_agent]`
@@ -137,25 +136,25 @@ visualization_agent.handoffs = [communication_agent]
   - Simple queries → Direct function tools
   - Complex queries → SQL pipeline via Query Planner
 
-**3. Query Planner Agent** (`query_planner_agent`)
+#### 3. Query Planner Agent (`query_planner_agent`)
 - **Role**: Plans complex SQL queries systematically
 - **Tools**: `get_table_schema`, `get_all_tables`, `get_column_names`
 - **Handoffs**: `[sql_writer_agent]`
 - **Output**: Structured `QueryPlan` with tables, columns, operations needed
 
-**4. SQL Writer Agent** (`sql_writer_agent`)
+#### 4. SQL Writer Agent (`sql_writer_agent`)
 - **Role**: Generates optimized SQL from plans
 - **Tools**: `get_table_schema`, `get_all_tables`
 - **Handoffs**: `[query_evaluator_agent]`
 - **Focus**: Efficient, safe SQL generation (SELECT only)
 
-**5. Query Evaluator Agent** (`query_evaluator_agent`)
+#### 5. Query Evaluator Agent (`query_evaluator_agent`)
 - **Role**: Validates results and performs sanity checks
 - **Tools**: `execute_sql_query`, `execute_sql_analysis`, `get_table_schema`
 - **Handoffs**: `[communication_agent, query_planner_agent, sql_writer_agent]`
 - **Validation**: Runs additional queries to verify results, checks data ranges
 
-**6. Data Loader Agent** (`data_loader_agent`)
+#### 6. Data Loader Agent (`data_loader_agent`)
 - **Role**: Handles file loading and data discovery
 - **Tools**: `load_csv_file`, `discover_and_load_csv_files`, `get_all_tables`
 - **Handoffs**: `[communication_agent]`
@@ -260,45 +259,44 @@ def execute_sql_analysis(description: str, sql_query: str) -> Dict[str, Any]
 ## 🧠 Memory Management & Session Handling
 
 ### Session Architecture
+The system uses UUID-based session management for robust multi-user support:
+
 ```python
-# Multi-user support with unique sessions
-session = SQLiteSession(session_id=str(uuid.uuid4()))
+# ChatService automatically generates unique UUID sessions
+chat_service = ChatService()  # Auto-generates UUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
-# Terminal: Simple session ID  
-session = SQLiteSession(session_id=123)
+# Optional: Provide specific session ID to resume conversations
+chat_service = ChatService(session_id="your-session-id")
 
-# Web: Unique session per user
-chat_service = ChatService()  # Auto-generates UUID
+# Internal SQLiteSession uses the UUID
+self.session = SQLiteSession(session_id=self.session_id)  # UUID string
 ```
 
+### Session Implementation Details
+- **UUID Generation**: Each ChatService instance gets a unique UUID session ID
+- **In-Memory Database**: SQLite `:memory:` database for fast queries
+- **No Persistence**: Sessions don't persist between application restarts
+- **Multi-User Safe**: UUID-based isolation prevents user interference
+- **Session Cleanup**: Automatic chart file cleanup when sessions end
+
 ### Memory Features
-- **Conversation History**: Automatic storage of agent interactions
-- **Context Awareness**: Agents reference previous questions and results
+- **Conversation History**: Automatic storage of agent interactions via SQLiteSession
+- **Context Awareness**: Agents reference previous questions and results across handoffs
 - **Follow-up Support**: "What about by department?" after asking about regions
-- **Session Isolation**: Multiple users don't interfere with each other
+- **Session Isolation**: UUID-based sessions ensure multiple users don't interfere
+- **Resource Management**: Automatic cleanup of generated chart files per session
 
 ## 🌐 Interface Architecture
 
-### ✅ Terminal Interface (`main.py`) - **CURRENTLY WORKING**
-- **Pattern**: Follows `agentic_app_quickstart/examples/` patterns exactly
-- **Features**: 
-  - Direct CLI interaction with full agent system
-  - Simple session management (`session_id=123`)
-  - All 6 agents with complete handoff relationships
-  - Automatic data loading from `data/` folder
-  - Memory-enabled follow-up questions
-- **Usage**: `uv run python main.py`
-- **Status**: ✅ **Ready for use and demonstration**
+### ✅ Terminal Interface (`main.py`)
+**Status**: Ready for use • **Usage**: `uv run python main.py`
 
-### 🚧 Web Interface (`gradio_app.py`) - **FUTURE IMPLEMENTATION**
-- **Status**: **Not yet implemented** - placeholder for future development
-- **Planned Features**: 
-  - Modern UI with professional design
-  - Multi-user support with isolated sessions
-  - Chart generation and export functionality
-  - Side-by-side chat and visualization panels
-- **Timeline**: Will be implemented in later project phases
-- **Note**: Currently non-functional - use terminal interface instead
+Features: CLI chat with 6-agent system, UUID sessions, memory, auto data loading, chart generation
+
+### 🚧 Web Interface (`gradio_app.py`) 
+**Status**: Future implementation
+
+Planned: Modern UI, multi-user sessions, visualization panels
 
 ### ✅ Chat Service Layer (`chat_service.py`) - **DESIGN CHOICE**
 
@@ -313,18 +311,20 @@ The `ChatService` class was designed as an abstraction layer for several strateg
 
 #### Current Implementation:
 ```python
-# Terminal uses ChatService directly
-chat_service = ChatService()  # Auto-generates UUID
-await chat_service.initialize_data()  # Loads sample data
-result = await chat_service.send_message(user_input)  # Processes through agents
+# Terminal uses ChatService with UUID session management
+chat_service = ChatService()  # Auto-generates UUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+await chat_service.initialize_data()  # Loads sample data from data/ directory
+result = await chat_service.send_message(user_input)  # Processes through agent system
+chat_service.close_session()  # Cleanup with chart file removal
 ```
 
 #### Key Features:
-- **Session Management**: UUID-based sessions for multi-user support
+- **Session Management**: UUID-based sessions for multi-user support with automatic generation
 - **Error Handling**: Comprehensive exception management with user-friendly messages
 - **Guardrail Integration**: Input/output filtering built into the service layer
-- **Memory Management**: Automatic conversation history storage
-- **Data Initialization**: Automatic CSV loading with progress feedback
+- **Memory Management**: Automatic conversation history storage via SQLiteSession
+- **Data Initialization**: Automatic CSV loading from data/ directory with progress feedback
+- **Resource Cleanup**: Session cleanup with automatic chart file removal on exit
 
 ## 📊 Visualization & Charts System
 
@@ -395,7 +395,7 @@ If you request unsupported charts (area charts, bubble charts, treemaps, etc.), 
    - Creates actual PNG chart files using matplotlib
    - Returns full file paths for user access
 
-3. **Visualization Core** (`visualization_core.py`):
+3. **Visualization Tools** (`visualization_tools.py`):
    - 7 chart creation functions (bar, line, histogram, pie, scatter, box, heatmap)
    - Data analysis and chart type suggestion logic
    - File management and unique naming system
@@ -425,11 +425,13 @@ execute_sql_query("SELECT product, SUM(price*quantity) as total_sales FROM sampl
 # Communication Agent presents final result to user
 ```
 
-#### **Session Management**
-- **Chart Storage**: Files saved to `/charts/` directory with unique timestamps
-- **Automatic Cleanup**: All chart files removed when session ends (`chat_service.close_session()`)
-- **Memory Management**: No persistent storage, prevents disk space accumulation
+#### **Session Management & Cleanup**
+- **Chart Storage**: Files saved to `/charts/` directory with unique timestamps and UUIDs
+- **Automatic Cleanup**: All PNG chart files removed when session ends (`chat_service.close_session()`)
+- **Memory Management**: In-memory SQLite database with no persistence between app restarts
+- **Resource Management**: Prevents disk space accumulation from multiple user sessions
 - **Error Handling**: Graceful cleanup even if individual file removal fails
+- **Session Isolation**: UUID-based sessions ensure chart files from different users don't interfere
 
 #### **Implementation Notes**
 - **Agent Handoffs**: The agentic framework handles handoffs automatically based on `agent.handoffs` configuration

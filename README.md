@@ -1,4 +1,3 @@
-## Mastering AI Agents and MCP: Build Enterprise Agentic Apps
 # Agentic App Quickstart
 
 This repo contains code examples, templates and assignments for the [Mastering AI Agents and MCP: Build Enterprise Agentic Apps](https://maven.com/rafael-pierre/building-agentic-ai-apps-with-mcp) [Maven](https://www.maven.com) course.
@@ -57,7 +56,8 @@ OPENAI_API_KEY="your_openai_api_key_here"
 OPENAI_AGENTS_DISABLE_TRACING=1
 ```
 
-ℹ️ If you're experiencing connection issues (e.g. SSL Handshake Issues)
+ℹ️ **If you're experiencing connection issues (e.g. SSL Handshake Issues):**
+
 1. Try using mobile data instead of WiFi
 2. Use this alternative URL: https://hexflow-g9bqfbexhmfyazat.z03.azurefd.net
 
@@ -72,7 +72,6 @@ An OpenAI model is already configured for you in the `examples/helpers.py` modul
 If you prefer to include model configuration in your custom modules, you can simply copy this excerpt:
 
 ```python
-
 from openai import AsyncOpenAI
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 import os
