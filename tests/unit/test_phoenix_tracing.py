@@ -28,24 +28,18 @@ load_dotenv()
 # Disable OpenAI agents internal tracing
 os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "1"
 
-# Configure Phoenix tracing
-from phoenix.otel import register
+# Configure Phoenix tracing using helper function
+from agentic_app_quickstart.examples.helpers import get_tracing_provider
 
-# Set Phoenix API key
-phoenix_api_key = os.getenv("PHEONIX_API_KEY")
+# Check Phoenix API key
+phoenix_api_key = os.getenv("PHOENIX_API_KEY")
 if phoenix_api_key:
-    os.environ["PHOENIX_API_KEY"] = phoenix_api_key
     print(f"✅ Phoenix API key set: {phoenix_api_key[:20]}...")
 else:
     print("❌ No Phoenix API key found!")
 
-# Register Phoenix tracing
-tracer_provider = register(
-    endpoint="https://app.phoenix.arize.com/s/devos",
-    project_name="analytics_system",
-    protocol="http/protobuf",
-    auto_instrument=True,
-)
+# Register Phoenix tracing using helper
+tracer_provider = get_tracing_provider("analytics_system")
 
 print("✅ Phoenix tracing registered")
 

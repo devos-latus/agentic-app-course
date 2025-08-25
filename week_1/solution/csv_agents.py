@@ -20,12 +20,10 @@ Use cases:
 - Friendly interface to technical data analysis capabilities
 """
 
-import os
 from pydantic import BaseModel
 from typing import List, Optional
 
-# Disable OpenAI agents internal tracing
-os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "1"
+# Note: Phoenix tracing is configured in chat_service.py using OpenInference instrumentation
 
 from agents import (
     Agent,
@@ -35,7 +33,11 @@ from agents import (
     GuardrailFunctionOutput,
     RunContextWrapper,
     TResponseInputItem,
+    set_tracing_disabled,
 )
+
+# Disable OpenAI agents internal tracing to prevent 401 errors
+set_tracing_disabled(True)
 from agentic_app_quickstart.examples.helpers import get_model
 from tools import (
     get_all_tables,

@@ -22,29 +22,33 @@ import uuid
 from typing import Dict, Any, Optional
 
 from dotenv import load_dotenv
-from agents import Runner, SQLiteSession, InputGuardrailTripwireTriggered
+from agents import (
+    Runner,
+    SQLiteSession,
+    InputGuardrailTripwireTriggered,
+    set_tracing_disabled,
+)
 from agents.exceptions import OutputGuardrailTripwireTriggered
 from csv_agents import communication_agent, data_loader_agent
-from phoenix.otel import register
-import tools
 
 # Load environment variables first
 load_dotenv()
 
-# Disable OpenAI agents internal tracing BEFORE importing agents
-os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "1"
+# Disable OpenAI agents internal tracing to prevent 401 errors
+set_tracing_disabled(True)
 
-# Set Phoenix API key
-os.environ["PHOENIX_API_KEY"] = os.getenv("PHEONIX_API_KEY")
+# Phoenix tracing setup using the standard OpenInference pattern
+from phoenix.trace import using_project
+from openinference.instrumentation.openai_agents import OpenAIAgentsInstrumentor
+from agentic_app_quickstart.examples.helpers import get_tracing_provider
 
-# Register Phoenix tracing (suppress verbose output)
-tracer_provider = register(
-    project_name="analytics_system",
-    endpoint="https://app.phoenix.arize.com/s/devos/v1/traces",
-    protocol="http/protobuf",
-    auto_instrument=True,
-    verbose=False,
-)
+# Initialize Phoenix tracing using the helper function
+tracing_provider = get_tracing_provider("analytics_system")
+
+# Enable automatic tracing for all agent operations
+OpenAIAgentsInstrumentor().instrument()
+
+import tools
 
 
 class ChatService:
@@ -81,12 +85,13 @@ class ChatService:
             return {"already_loaded": True, "tables": await self.get_available_tables()}
 
         try:
-            # Use DataLoaderAgent to load default data
-            result = await Runner.run(
-                starting_agent=data_loader_agent,
-                input="Please scan the 'data' directory and load all CSV files found there.",
-                session=self.session,
-            )
+            # Use DataLoaderAgent to load default data with Phoenix project context
+            with using_project("analytics_system"):
+                result = await Runner.run(
+                    starting_agent=data_loader_agent,
+                    input="Please scan the 'data' directory and load all CSV files found there.",
+                    session=self.session,
+                )
 
             self._data_loaded = True
 
@@ -148,10 +153,13 @@ class ChatService:
             }
 
         try:
-            # Use communication agent as entry point
-            result = await Runner.run(
-                starting_agent=communication_agent, input=message, session=self.session
-            )
+            # Use communication agent as entry point with Phoenix project context
+            with using_project("analytics_system"):
+                result = await Runner.run(
+                    starting_agent=communication_agent,
+                    input=message,
+                    session=self.session,
+                )
 
             return {
                 "success": True,
@@ -221,11 +229,12 @@ class ChatService:
         try:
             load_request = f"Please load the CSV file '{file_path}' and name the table '{table_name.strip()}'"
 
-            result = await Runner.run(
-                starting_agent=data_loader_agent,
-                input=load_request,
-                session=self.session,
-            )
+            with using_project("analytics_system"):
+                result = await Runner.run(
+                    starting_agent=data_loader_agent,
+                    input=load_request,
+                    session=self.session,
+                )
 
             # Check if the response indicates failure
             response_text = result.final_output.lower()
@@ -303,11 +312,12 @@ class ChatService:
             else:
                 data_context = "No datasets were loaded. Please welcome the user and explain the situation."
 
-            welcome_result = await Runner.run(
-                starting_agent=communication_agent,
-                input=data_context,
-                session=self.session,
-            )
+            with using_project("analytics_system"):
+                welcome_result = await Runner.run(
+                    starting_agent=communication_agent,
+                    input=data_context,
+                    session=self.session,
+                )
 
             return welcome_result.final_output
 
@@ -345,7 +355,6 @@ class ChatService:
         Removes all PNG files from the charts directory to prevent disk space
         accumulation from multiple sessions.
         """
-        import os
         import glob
 
         try:

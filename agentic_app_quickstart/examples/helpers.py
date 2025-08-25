@@ -2,6 +2,7 @@ from openai import AsyncOpenAI
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 import os
 from dotenv import load_dotenv
+from phoenix.otel import register
 
 load_dotenv()
 
@@ -25,8 +26,30 @@ def get_client():
 
 def get_model():
     model = OpenAIChatCompletionsModel(
-        model="gpt-4.1",
+        model="gpt-5",
         openai_client=get_client(),
     )
 
     return model
+
+
+def get_tracing_provider(project_name: str = "analytics_system"):
+    """
+    Initialize Phoenix tracing provider with proper configuration.
+
+    Args:
+        project_name: The Phoenix project name for organizing traces
+
+    Returns:
+        The configured tracer provider
+    """
+    phoenix_endpoint = os.getenv("PHOENIX_ENDPOINT")
+
+    tracing_provider = register(
+        endpoint=phoenix_endpoint,
+        project_name=project_name,
+        protocol="http/protobuf",
+        auto_instrument=True,
+    )
+
+    return tracing_provider
