@@ -1,0 +1,66 @@
+# Week 3 Docker ignore file
+# Exclude unnecessary files from Docker build context
+
+# Git and version control
+.git
+.gitignore
+
+# Python cache and temporary files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation and development files
+*.md
+docs/
+README*
+
+# Test files
+tests/
+test_*
+*_test.py
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Environment files (should be provided at runtime)
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# Charts directory (created at runtime)
+charts/
+
+# Week 1 and Week 2 directories (not needed in container)
+../week_1/
+../week_2/
+../agentic_app_quickstart/
+
+# Development tools
+.pytest_cache/
+.coverage
+.ruff_cache/
